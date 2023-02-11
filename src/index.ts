@@ -94,7 +94,7 @@ class Transcode {
           const r = renditions[i];
           m3u8Playlist += `
 #EXT-X-STREAM-INF:BANDWIDTH=${r.bv.replace('k', '000')},RESOLUTION=${r.width}x${r.height}
-${r.height}.m3u8`
+${r.master_title}.m3u8`
         }
         const m3u8Path = `${this.outputPath}/index.m3u8`
         await fs.promises.writeFile(m3u8Path, m3u8Playlist);

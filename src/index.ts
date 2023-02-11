@@ -1,10 +1,8 @@
-import {spawn} from 'child_process';
 import DefaultRenditions from './default-renditions';
-import * as Ffmpeg from 'fluent-ffmpeg';
-import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import Ffmpeg from 'fluent-ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs';
 import path from 'path';
-import { getVideoDurationInSeconds } from 'get-video-duration';
 import to from 'await-to-js';
 
 Ffmpeg.setFfmpegPath(ffmpegInstaller.path);
@@ -23,43 +21,20 @@ class Transcode {
       return new Promise(async (resolve, reject) =>  {
         const commands : any  = await this.buildCommands();
         const masterPlaylist = await this.writePlaylist();
-        const [err, duration] = await to(getVideoDurationInSeconds(this.inputPath));
-        if (err) return reject(err);
 
-        const ls = spawn(ffmpegInstaller.path, commands);
-        let showLogs = true;
-        if (this.options.showLogs == false){
-          showLogs = false;
-        }
-        ls.stdout.on('data', (data: any) =>  {
-          if (showLogs){
-            console.log(data.toString());
-          }
-        });
-
-        ls.stderr.on('data', (data) => {
-          if (showLogs) {
-            const splitData = data.toString().split(" ");
-            const findTime = splitData.find((it: any) => it.indexOf('time=') !== -1);
-            if (findTime) {
-              const timeString = findTime.slice(5, findTime.length);
-              const second = timeString.split(':').reduce((acc: any, time: any) => (60 * acc) + +time);
-
-              console.log(`File ${this.inputPath} Percent complete: ${Number((second/duration) * 100).toFixed(2)}`);
-            }
-          }
-        });
-
-        ls.on('exit', async (code: any) =>  {
-          if (showLogs){
-            console.log(`Child exited with code ${code}`);
-          }
-          if (code == 0) return resolve(masterPlaylist);
-
-          const [error] = await to(this.deleteOutputPath());
-          if (error) return reject(error);
-          return reject('Video Failed to Transcode');
+        Ffmpeg()
+        .outputOptions(commands)
+        .on('error', async (err) => {
+          await to(this.deleteOutputPath());
+          reject(err);
         })
+        .on('progress', (progress) => {
+          console.log(`File ${this.inputPath} Percent complete: ${Number(progress?.percent || 0).toFixed(2)}`);
+        })
+        .on('end', () => {
+          resolve(masterPlaylist);
+        })
+        .run();
       })
     }
 

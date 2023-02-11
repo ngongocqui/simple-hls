@@ -53,8 +53,8 @@ class Transcode {
           }
           if (code == 0) return resolve(masterPlaylist);
 
-          const [err_1] = await to(this.deleteOutputPath());
-          if (err_1) return reject(err_1);
+          const [error] = await to(this.deleteOutputPath());
+          if (error) return reject(error);
           return reject('Video Failed to Transcode');
         })
       })

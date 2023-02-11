@@ -53,7 +53,8 @@ class Transcode {
           }
           if (code == 0) return resolve(masterPlaylist);
 
-          await this.deleteOutputPath();
+          const [err] = await to(this.deleteOutputPath());
+          if (err) return reject(err);
           return reject('Video Failed to Transcode');
         })
       })
@@ -63,6 +64,7 @@ class Transcode {
       for (const file of await fs.promises.readdir(this.outputPath)) {
         await fs.promises.unlink(path.join(this.outputPath, file));
       }
+      fs.promises.rmdir(this.outputPath);
     }
 
     buildCommands(){

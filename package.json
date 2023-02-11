@@ -4,6 +4,7 @@
     "author": "Techwarriorz",
     "dependencies": {
         "@ffmpeg-installer/ffmpeg": "^1.1.0",
+        "await-to-js": "^3.0.0",
         "child_process": "^1.0.2",
         "fs": "0.0.1-security",
         "get-video-duration": "^4.1.0",

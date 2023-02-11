@@ -4,6 +4,7 @@ import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs';
 import path from 'path';
 import { getVideoDurationInSeconds } from 'get-video-duration';
+import to from 'await-to-js';
 
 class Transcode {
     inputPath: string;
@@ -19,7 +20,9 @@ class Transcode {
       return new Promise(async (resolve, reject) =>  {
         const commands : any  = await this.buildCommands();
         const masterPlaylist = await this.writePlaylist();
-        const duration = await getVideoDurationInSeconds(this.inputPath);
+        const [err, duration] = await to(getVideoDurationInSeconds(this.inputPath));
+        if (err) return reject(err);
+
         const ls = spawn(ffmpegPath.path, commands);
         let showLogs = true;
         if (this.options.showLogs == false){

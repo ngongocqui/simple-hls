@@ -1,11 +1,12 @@
 {
-    "version": "0.0.6",
+    "version": "0.0.7",
     "name": "@m3u8/simple-hls",
     "author": "Techwarriorz",
     "dependencies": {
         "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "await-to-js": "^3.0.0",
         "child_process": "^1.0.2",
+        "fluent-ffmpeg": "^2.1.2",
         "fs": "0.0.1-security",
         "get-video-duration": "^4.1.0",
         "path": "^0.12.7",
@@ -25,6 +26,7 @@
         "postversion": "git push && git push --tags"
     },
     "devDependencies": {
+        "@types/fluent-ffmpeg": "^2.1.20",
         "@types/jest": "^27.0.2",
         "@types/node": "^16.11.3",
         "jest": "^27.3.1",

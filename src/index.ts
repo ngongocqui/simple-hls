@@ -1,10 +1,13 @@
 import {spawn} from 'child_process';
 import DefaultRenditions from './default-renditions';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import * as Ffmpeg from 'fluent-ffmpeg';
+import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs';
 import path from 'path';
 import { getVideoDurationInSeconds } from 'get-video-duration';
 import to from 'await-to-js';
+
+Ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 class Transcode {
     inputPath: string;
@@ -23,7 +26,7 @@ class Transcode {
         const [err, duration] = await to(getVideoDurationInSeconds(this.inputPath));
         if (err) return reject(err);
 
-        const ls = spawn(ffmpegPath.path, commands);
+        const ls = spawn(ffmpegInstaller.path, commands);
         let showLogs = true;
         if (this.options.showLogs == false){
           showLogs = false;

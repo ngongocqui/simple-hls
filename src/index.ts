@@ -2,6 +2,7 @@ import {spawn} from 'child_process';
 import DefaultRenditions from './default-renditions';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs/promises';
+import path from 'path';
 
 class Transcode {
     inputPath: string;
@@ -34,16 +35,22 @@ class Transcode {
           }
         });
 
-        ls.on('exit', (code: any) =>  {
+        ls.on('exit', async (code: any) =>  {
           if (showLogs){
             console.log(`Child exited with code ${code}`);
           }
           if (code == 0) return resolve(masterPlaylist);
 
+          await this.deleteOutputPath();
           return reject('Video Failed to Transcode');
-          
         })
       })
+    }
+
+    async deleteOutputPath() {
+      for (const file of await fs.readdir(this.outputPath)) {
+        await fs.unlink(path.join(this.outputPath, file));
+      }
     }
 
     buildCommands(){
@@ -74,7 +81,6 @@ ${r.height}.m3u8`
         await fs.writeFile(m3u8Path, m3u8Playlist);
 
         resolve(m3u8Path);
-
       })
     }
 }

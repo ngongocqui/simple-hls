@@ -1,8 +1,9 @@
 import {spawn} from 'child_process';
 import DefaultRenditions from './default-renditions';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
+import { getVideoDurationInSeconds } from 'get-video-duration';
 
 class Transcode {
     inputPath: string;
@@ -18,6 +19,7 @@ class Transcode {
       return new Promise(async (resolve, reject) =>  {
         const commands : any  = await this.buildCommands();
         const masterPlaylist = await this.writePlaylist();
+        const duration = await getVideoDurationInSeconds(this.inputPath);
         const ls = spawn(ffmpegPath.path, commands);
         let showLogs = true;
         if (this.options.showLogs == false){
@@ -29,9 +31,16 @@ class Transcode {
           }
         });
 
-        ls.stderr.on('data', (data: any) =>  {
-          if (showLogs){
-            console.log(data.toString());
+        ls.stderr.on('data', (data) => {
+          if (showLogs) {
+            const splitData = data.toString().split(" ");
+            const timeString = splitData.find((it: any) => it.indexOf('time=') !== -1);
+            if (timeString) {
+              const time = timeString.slice(5, timeString.length);
+              const second = time.split(':').reduce((acc: any, time: any) => (60 * acc) + +time);
+
+              console.log(`File ${this.inputPath} Percent complete: ${Number((second/duration) * 100).toFixed(2)}`);
+            }
           }
         });
 
@@ -48,15 +57,20 @@ class Transcode {
     }
 
     async deleteOutputPath() {
-      for (const file of await fs.readdir(this.outputPath)) {
-        await fs.unlink(path.join(this.outputPath, file));
+      for (const file of await fs.promises.readdir(this.outputPath)) {
+        await fs.promises.unlink(path.join(this.outputPath, file));
       }
     }
 
     buildCommands(){
-      return new Promise((resolve, reject) =>  {
+      return new Promise(async (resolve, reject) =>  {
         let commands = ['-hide_banner', '-y', '-i', this.inputPath];
         const renditions = this.options.renditions || DefaultRenditions;
+
+        if (!fs.existsSync(this.outputPath)){
+          await fs.promises.mkdir(this.outputPath);
+        }
+
         for (let i = 0, len = renditions.length; i < len; i++){
           const r = renditions[i];
           commands = commands.concat(['-vf', `scale=w=${r.width}:h=${r.height}:force_original_aspect_ratio=decrease`, '-hls_flags', 'split_by_time', '-c:a', 'aac', '-ar', '48000', '-c:v', 'libx264', `-profile:v`, r.profile, '-crf', '10', '-sc_threshold', '0', '-g', '48', '-hls_time', r.hlsTime, '-hls_playlist_type', 'vod', '-b:v', r.bv, '-maxrate', r.maxrate, '-bufsize', r.bufsize, '-b:a', r.ba, '-hls_segment_filename', `${this.outputPath}/${r.ts_title}_%03d.ts`, `${this.outputPath}/${r.master_title}.m3u8`]);
@@ -78,7 +92,7 @@ class Transcode {
 ${r.height}.m3u8`
         }
         const m3u8Path = `${this.outputPath}/index.m3u8`
-        await fs.writeFile(m3u8Path, m3u8Playlist);
+        await fs.promises.writeFile(m3u8Path, m3u8Playlist);
 
         resolve(m3u8Path);
       })

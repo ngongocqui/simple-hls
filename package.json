@@ -1,0 +1,54 @@
+{
+    "version": "0.0.2",
+    "name": "@m3u8/simple-hls",
+    "author": "Techwarriorz",
+    "dependencies": {
+        "@ffmpeg-installer/ffmpeg": "^1.1.0",
+        "child_process": "^1.0.2",
+        "fs": "0.0.1-security",
+        "path": "^0.12.7",
+        "typescript": "^4.4.4"
+    },
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "test": "jest --config jestconfig.json",
+        "build": "tsc",
+        "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+        "lint": "tslint -p tsconfig.json",
+        "prepare": "npm run build",
+        "prepublishOnly": "npm run lint",
+        "preversion": "npm run lint",
+        "version": "npm run format && git add -A src",
+        "postversion": "git push && git push --tags"
+    },
+    "devDependencies": {
+        "@types/jest": "^27.0.2",
+        "@types/node": "^16.11.3",
+        "jest": "^27.3.1",
+        "prettier": "^2.4.1",
+        "ts-jest": "^27.0.7",
+        "tslint": "^6.1.3",
+        "tslint-config-prettier": "^1.18.0"
+    },
+    "files": [
+        "lib/**/*"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/techwarriorz/simple-hls"
+    },
+    "bugs": {
+        "url": "https://github.com/techwarriorz/simple-hls/issues"
+    },
+    "homepage": "https://github.com/techwarriorz/simple-hls#readme",
+    "license": "ISC",
+    "keywords": [
+        "HLS",
+        "Multibitrate",
+        "Multi Bitrate",
+        "Transcoder",
+        "FFMPEG"
+    ],
+    "description": "A Multi-Bitrate Transcoding Library for NodeJS."
+}

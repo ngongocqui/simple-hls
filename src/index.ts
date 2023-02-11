@@ -34,10 +34,10 @@ class Transcode {
         ls.stderr.on('data', (data) => {
           if (showLogs) {
             const splitData = data.toString().split(" ");
-            const timeString = splitData.find((it: any) => it.indexOf('time=') !== -1);
-            if (timeString) {
-              const time = timeString.slice(5, timeString.length);
-              const second = time.split(':').reduce((acc: any, time: any) => (60 * acc) + +time);
+            const findTime = splitData.find((it: any) => it.indexOf('time=') !== -1);
+            if (findTime) {
+              const timeString = findTime.slice(5, findTime.length);
+              const second = timeString.split(':').reduce((acc: any, time: any) => (60 * acc) + +time);
 
               console.log(`File ${this.inputPath} Percent complete: ${Number((second/duration) * 100).toFixed(2)}`);
             }

@@ -19,11 +19,12 @@ class Transcode {
 
     transcode(){
       return new Promise(async (resolve, reject) =>  {
-        const commands : any  = await this.buildCommands();
-        const masterPlaylist = await this.writePlaylist();
+        const commands: any  = await this.buildCommands();
+        const m3u8Path = `${this.outputPath}/index.m3u8`;
 
-        Ffmpeg()
+        Ffmpeg(this.inputPath)
         .outputOptions(commands)
+        .output(m3u8Path)
         .on('error', async (err) => {
           await to(this.deleteOutputPath());
           reject(err);
@@ -32,7 +33,7 @@ class Transcode {
           console.log(`File ${this.inputPath} Percent complete: ${Number(progress?.percent || 0).toFixed(2)}`);
         })
         .on('end', () => {
-          resolve(masterPlaylist);
+          resolve(m3u8Path);
         })
         .run();
       })
@@ -47,7 +48,7 @@ class Transcode {
 
     buildCommands(){
       return new Promise(async (resolve, reject) =>  {
-        let commands = ['-hide_banner', '-y', '-i', this.inputPath];
+        let commands = ['-hide_banner', '-y'];
         const renditions = this.options.renditions || DefaultRenditions;
 
         if (!fs.existsSync(this.outputPath)){
@@ -59,25 +60,6 @@ class Transcode {
           commands = commands.concat(['-vf', `scale=w=${r.width}:h=${r.height}:force_original_aspect_ratio=decrease`, '-hls_flags', 'split_by_time', '-c:a', 'aac', '-ar', '48000', '-c:v', 'libx264', `-profile:v`, r.profile, '-crf', '10', '-sc_threshold', '0', '-g', '48', '-hls_time', r.hlsTime, '-hls_playlist_type', 'vod', '-b:v', r.bv, '-maxrate', r.maxrate, '-bufsize', r.bufsize, '-b:a', r.ba, '-hls_segment_filename', `${this.outputPath}/${r.ts_title}_%03d.ts`, `${this.outputPath}/${r.master_title}.m3u8`]);
         }
          resolve(commands);
-      })
-    }
-
-    writePlaylist(){
-      return new Promise(async (resolve, reject) =>  {
-       let m3u8Playlist =  `#EXTM3U
-#EXT-X-VERSION:3`;
-        const renditions = this.options.renditions || DefaultRenditions;
-        
-        for (let i = 0, len = renditions.length; i < len; i++){
-          const r = renditions[i];
-          m3u8Playlist += `
-#EXT-X-STREAM-INF:BANDWIDTH=${r.bv.replace('k', '000')},RESOLUTION=${r.width}x${r.height}
-${r.master_title}.m3u8`
-        }
-        const m3u8Path = `${this.outputPath}/index.m3u8`
-        await fs.promises.writeFile(m3u8Path, m3u8Playlist);
-
-        resolve(m3u8Path);
       })
     }
 }
